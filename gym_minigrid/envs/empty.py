@@ -14,6 +14,7 @@ class EmptyEnv(MiniGridEnv):
     ):
         self.agent_start_pos = agent_start_pos
         self.agent_start_dir = agent_start_dir
+        self.size = size
 
         super().__init__(
             grid_size=size,
@@ -30,7 +31,9 @@ class EmptyEnv(MiniGridEnv):
         self.grid.wall_rect(0, 0, width, height)
 
         # Place a goal square in the bottom-right corner
-        self.grid.set(width - 2, height - 2, Goal())
+        #x, y = self._rand_pos(0, self.size - 1, 0, self.size -1)
+        x, y = self.size - 2, self.size -2
+        self.grid.set(x, y, Goal())
 
         # Place the agent
         if self.agent_start_pos is not None:
@@ -61,6 +64,10 @@ class EmptyEnv16x16(EmptyEnv):
     def __init__(self):
         super().__init__(size=16)
 
+class EmptyEnv7x7(EmptyEnv):
+    def __init__(self):
+        super().__init__(size=7, agent_start_pos=(3,3))
+
 register(
     id='MiniGrid-Empty-5x5-v0',
     entry_point='gym_minigrid.envs:EmptyEnv5x5'
@@ -89,4 +96,9 @@ register(
 register(
     id='MiniGrid-Empty-16x16-v0',
     entry_point='gym_minigrid.envs:EmptyEnv16x16'
+)
+
+register(
+    id='MiniGrid-Empty-7x7-v0',
+    entry_point='gym_minigrid.envs:EmptyEnv7x7'
 )

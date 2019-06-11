@@ -678,6 +678,7 @@ class MiniGridEnv(gym.Env):
 
         # Actions are discrete integer values
         self.action_space = spaces.Discrete(len(self.actions))
+        self.action_size = len(self.actions)
 
         # Number of cells (width and height) in the agent view
         self.agent_view_size = agent_view_size
@@ -695,7 +696,7 @@ class MiniGridEnv(gym.Env):
         })
 
         # Range of possible rewards
-        self.reward_range = (0, 1)
+        self.reward_range = (0, 10)
 
         # Renderer object used to render the whole grid (full-scale)
         self.grid_render = None
@@ -825,7 +826,7 @@ class MiniGridEnv(gym.Env):
         Compute the reward to be given upon success
         """
 
-        return 1 - 0.9 * (self.step_count / self.max_steps)
+        return 10 - 0.9 * (self.step_count / self.max_steps)
 
     def _rand_int(self, low, high):
         """

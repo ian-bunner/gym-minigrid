@@ -8,19 +8,25 @@ class EmptyEnv(MiniGridEnv):
 
     def __init__(
         self,
-        size=8,
+        size=7,
         agent_start_pos=None,
         agent_start_dir=0,
+        goal_pos=None
+
     ):
         if agent_start_pos == None:
             agent_start_pos = (int((size+1)/2), int((size+1)/2))
 
+        if goal_pos == None:
+            goal_pos = (size, size)
+        
         self.agent_start_pos = agent_start_pos
         self.agent_start_dir = agent_start_dir
         self.size = size
+        self.goal_pos=goal_pos
 
         super().__init__(
-            grid_size=size,
+            grid_size=size+2,
             max_steps=4*size*size,
             # Set this to True for maximum speed
             see_through_walls=True
@@ -35,7 +41,7 @@ class EmptyEnv(MiniGridEnv):
 
         # Place a goal square in the bottom-right corner
         #x, y = self._rand_pos(0, self.size - 1, 0, self.size -1)
-        x, y = self.size - 2, self.size -2
+        x, y = self.goal_pos[0], self.goal_pos[1] 
         self.grid.set(x, y, Goal())
         self.goal_x = x
         self.goal_y = y
@@ -81,7 +87,21 @@ class EmptyEnv25x25(EmptyEnv):
     def __init__(self):
         super().__init__(size=27, agent_start_pos=(13,13))
 
+class EmptyEnvNxN(EmptyEnv):
+    def __init__(self, size=None, start=None, goal=None):
+        '''
+        if _agent_start_pos == None:
+            _agent_start_pos_ = ((_size+1)/2 , (_size+1)/2)
+        if _goal_pos=None:
+            _goal_pos = (_size - 2, _size - 2)
+        '''
+        super().__init__(size=size+2, agent_start_pos = start, goal_pos = goal)
 
+
+register(
+    id='MiniGrid-Empty-NxN-v0',
+    entry_point='gym_minigrid.envs:EmptyEnvNxN'
+)
 register(
     id='MiniGrid-Empty-5x5-v0',
     entry_point='gym_minigrid.envs:EmptyEnv5x5'
@@ -127,15 +147,4 @@ register(
     entry_point='gym_minigrid.envs:EmptyEnv25x25'
 )
 
-register(
-    id='MiniGrid-Empty-NxN-v0',
-    entry_point='gym_minigrid.envs:EmptyEnvNxN'
-)
 
-'''
-class EmptyEnvNxN(EmptyEnv, _size=None, agent_start_pos=None):
-    def __init__(self):
-        if agent_start_pos == None:
-            self.agent_start_pos = ((size_+1)/2 , (size_+1)/2)
-        super().__init__(size=_size+2, agent_start_pos = self.agent_start_pos)
-'''

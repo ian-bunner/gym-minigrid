@@ -1,3 +1,4 @@
+import time
 import math
 import gym
 from enum import IntEnum
@@ -642,20 +643,11 @@ class MiniGridEnv(gym.Env):
 
     # Enumeration of possible actions
     class Actions(IntEnum):
-        # Turn left, turn right, move forward
+        # Move left, right, forward or down
         left = 0
         right = 1
-        forward = 2
-
-        # Pick up an object
-        pickup = 3
-        # Drop an object
-        drop = 4
-        # Toggle/activate an object
-        toggle = 5
-
-        # Done completing task
-        done = 6
+        up = 2
+        down = 3
 
     def __init__(
         self,
@@ -680,11 +672,14 @@ class MiniGridEnv(gym.Env):
         self.action_space = spaces.Discrete(len(self.actions))
         self.action_size = len(self.actions)
 
+        self.state_size = (width - 2) * (height - 2)
+
         # Number of cells (width and height) in the agent view
         self.agent_view_size = agent_view_size
 
         # Observations are dictionaries containing an
         # encoding of the grid and a textual 'mission' string
+        '''
         self.observation_space = spaces.Box(
             low=0,
             high=255,
@@ -694,9 +689,11 @@ class MiniGridEnv(gym.Env):
         self.observation_space = spaces.Dict({
             'image': self.observation_space
         })
+        '''
+        self.observation_space = spaces.Discrete(width * height)
 
         # Range of possible rewards
-        self.reward_range = (0, 10)
+        self.reward_range = (-1 * (width + height - 2), 0)
 
         # Renderer object used to render the whole grid (full-scale)
         self.grid_render = None
@@ -711,7 +708,6 @@ class MiniGridEnv(gym.Env):
         self.see_through_walls = see_through_walls
 
         # Starting position and direction for the agent
-        self.start_pos = None
         self.start_dir = None
 
         # Initialize the RNG
@@ -745,7 +741,7 @@ class MiniGridEnv(gym.Env):
         self.step_count = 0
 
         # Return first observation
-        obs = self.gen_obs()
+        obs = (self.width - 2) * (self.agent_pos[1] - 1) + self.agent_pos[0]
         return obs
 
     def seed(self, seed=1337):
@@ -825,8 +821,14 @@ class MiniGridEnv(gym.Env):
         """
         Compute the reward to be given upon success
         """
+        return -1 * self._manhattan_distance() 
+        #return 1 - 0.9 * (self.step_count / self.max_steps)
 
-        return 10 - 0.9 * (self.step_count / self.max_steps)
+    def _manhattan_distance(self):
+        """
+        Sum of difference between x and y positions of agent and target
+        """
+        return abs(self.agent_pos[0] - self.goal_x) + abs(self.agent_pos[1] - self.goal_y)
 
     def _rand_int(self, low, high):
         """
@@ -1098,31 +1100,47 @@ class MiniGridEnv(gym.Env):
         reward = 0
         done = False
 
-        # Get the position in front of the agent
-        fwd_pos = self.front_pos
+        agent_x_pos = self.agent_pos[0]
+        agent_y_pos = self.agent_pos[1]
 
-        # Get the contents of the cell in front of the agent
-        fwd_cell = self.grid.get(*fwd_pos)
+        # Get the possible new positions of the agent (0th and Nth columns and rows have walls)
+        up_pos = (agent_x_pos, max(1, agent_y_pos - 1))
+        down_pos = (agent_x_pos, min(self.height - 1, agent_y_pos + 1))
+        left_pos = (max(1, agent_x_pos - 1), agent_y_pos)
+        right_pos = (min(self.width - 1, agent_x_pos + 1), agent_y_pos)
 
-        # Rotate left
+        # Get the contents of the possible new cells 
+        up_cell = self.grid.get(*up_pos)
+        down_cell = self.grid.get(*down_pos)
+        left_cell = self.grid.get(*left_pos)
+        right_cell = self.grid.get(*right_pos)
+
+        # ADD NOTE HERE
         if action == self.actions.left:
-            self.agent_dir -= 1
-            if self.agent_dir < 0:
-                self.agent_dir += 4
+            if left_cell == None or left_cell.can_overlap():
+                self.agent_pos = left_pos 
 
-        # Rotate right
         elif action == self.actions.right:
-            self.agent_dir = (self.agent_dir + 1) % 4
+            if right_cell == None or right_cell.can_overlap():
+                self.agent_pos = right_pos 
 
-        # Move forward
-        elif action == self.actions.forward:
-            if fwd_cell == None or fwd_cell.can_overlap():
-                self.agent_pos = fwd_pos
-            if fwd_cell != None and fwd_cell.type == 'goal':
-                done = True
-                reward = self._reward()
-            if fwd_cell != None and fwd_cell.type == 'lava':
-                done = True
+        elif action == self.actions.up:
+            if up_cell == None or up_cell.can_overlap():
+                self.agent_pos = up_pos
+
+        elif action == self.actions.down:
+            if down_cell == None or down_cell.can_overlap():
+                self.agent_pos = down_pos
+
+        new_cell = self.grid.get(*self.agent_pos)
+
+        if  new_cell != None and new_cell.type == 'lava':
+            done = True
+
+        if new_cell != None and new_cell.type == 'goal':
+            done = True
+
+        ''' Currently impossible, may add back this functionality
 
         # Pick up an object
         elif action == self.actions.pickup:
@@ -1154,7 +1172,11 @@ class MiniGridEnv(gym.Env):
         if self.step_count >= self.max_steps:
             done = True
 
-        obs = self.gen_obs()
+        '''
+
+        obs = (self.width - 2) * (self.agent_pos[1] - 1) + self.agent_pos[0] 
+        reward = self._reward()
+        #time.sleep(.3)
 
         return obs, reward, done, {}
 

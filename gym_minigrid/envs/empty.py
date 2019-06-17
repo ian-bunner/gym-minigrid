@@ -1,3 +1,4 @@
+import random
 from gym_minigrid.minigrid import *
 from gym_minigrid.register import register
 
@@ -11,14 +12,16 @@ class EmptyEnv(MiniGridEnv):
         size=7,
         agent_start_pos=None,
         agent_start_dir=0,
-        goal_pos=None
+        goal_pos=None,
+        four_corners=False
 
     ):
+        self.four_corners = four_corners
         if agent_start_pos == None:
             agent_start_pos = (int((size+1)/2), int((size+1)/2))
 
         if goal_pos == None:
-            goal_pos = (size, size)
+            goal_pos = (size-2, size-2)
         
         self.agent_start_pos = agent_start_pos
         self.agent_start_dir = agent_start_dir
@@ -26,7 +29,7 @@ class EmptyEnv(MiniGridEnv):
         self.goal_pos=goal_pos
 
         super().__init__(
-            grid_size=size+2,
+            grid_size=size,
             max_steps=4*size*size,
             # Set this to True for maximum speed
             see_through_walls=True
@@ -41,7 +44,20 @@ class EmptyEnv(MiniGridEnv):
 
         # Place a goal square in the bottom-right corner
         #x, y = self._rand_pos(0, self.size - 1, 0, self.size -1)
-        x, y = self.goal_pos[0], self.goal_pos[1] 
+        if self.four_corners:
+            num = random.randint(0,4)
+            if num == 0:
+                self.goal_pos = 1, 1
+            elif num == 1:
+                self.goal_pos = 1, self.size-2
+            elif num == 2:
+                self.goal_pos = self.size-2, 1
+            else: 
+                self.goal_pos = self.size-2, self.size-2
+
+
+        
+        x, y = self.goal_pos[0], self.goal_pos[1]
         self.grid.set(x, y, Goal())
         self.goal_x = x
         self.goal_y = y
@@ -51,6 +67,7 @@ class EmptyEnv(MiniGridEnv):
             self.start_pos = self.agent_start_pos
             self.start_dir = self.agent_start_dir
         else:
+            print("BAD!!")
             self.place_agent()
 
         self.mission = "get to the green goal square"
@@ -88,14 +105,14 @@ class EmptyEnv25x25(EmptyEnv):
         super().__init__(size=27, agent_start_pos=(13,13))
 
 class EmptyEnvNxN(EmptyEnv):
-    def __init__(self, size=None, start=None, goal=None):
+    def __init__(self, size=None, start=None, goal=None, four_corners=False):
         '''
         if _agent_start_pos == None:
             _agent_start_pos_ = ((_size+1)/2 , (_size+1)/2)
         if _goal_pos=None:
             _goal_pos = (_size - 2, _size - 2)
         '''
-        super().__init__(size=size+2, agent_start_pos = start, goal_pos = goal)
+        super().__init__(size=size+2, agent_start_pos = start, goal_pos = goal, four_corners=four_corners)
 
 
 register(

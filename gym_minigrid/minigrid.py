@@ -734,6 +734,7 @@ class MiniGridEnv(gym.Env):
         self.agent_pos = self.start_pos
         self.agent_dir = self.start_dir
 
+
         # Item picked up, being carried, initially nothing
         self.carrying = None
 
@@ -1168,11 +1169,11 @@ class MiniGridEnv(gym.Env):
 
         else:
             assert False, "unknown action"
+        '''
 
         if self.step_count >= self.max_steps:
             done = True
 
-        '''
 
         obs = (self.width - 2) * (self.agent_pos[1] - 1) + self.agent_pos[0] 
         reward = self._reward()

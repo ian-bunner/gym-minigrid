@@ -742,7 +742,7 @@ class MiniGridEnv(gym.Env):
         self.step_count = 0
 
         # Return first observation
-        obs = (self.width - 2) * (self.agent_pos[1] - 1) + self.agent_pos[0]
+        obs = ((self.width - 2) * (self.agent_pos[1] - 1) + self.agent_pos[0]) - 1
         return obs
 
     def seed(self, seed=1337):
@@ -1175,7 +1175,7 @@ class MiniGridEnv(gym.Env):
             done = True
 
 
-        obs = (self.width - 2) * (self.agent_pos[1] - 1) + self.agent_pos[0] 
+        obs = ((self.width - 2) * (self.agent_pos[1] - 1) + self.agent_pos[0]) - 1
         reward = self._reward()
         #time.sleep(.3)
 

@@ -672,7 +672,7 @@ class MiniGridEnv(gym.Env):
         self.action_space = spaces.Discrete(len(self.actions))
         self.action_size = len(self.actions)
 
-        self.state_size = (width - 2) * (height - 2)
+        self.state_size = (width) * (height)
 
         # Number of cells (width and height) in the agent view
         self.agent_view_size = agent_view_size
